@@ -6,10 +6,10 @@
 
 - [O] Array
 - [O] ArrayList
-- [ ] LinkedList
-- [ ] Stack
-- [ ] Queue
-- [ ] HashMap
+- [O] LinkedList
+- [O] Stack
+- [O] Queue
+- [O] HashMap
 - [ ] HashSet
 
 ## Goal
