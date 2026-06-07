@@ -10,7 +10,7 @@
 - [O] Stack
 - [O] Queue
 - [O] HashMap
-- [ ] HashSet
+- [O] HashSet
 
 ## Goal
 
