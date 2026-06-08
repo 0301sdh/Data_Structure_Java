@@ -21,15 +21,16 @@ public class MyArrayList{
      }
 
      // 배열 크기를 늘리는 함수
-     public void doubling(){
+     private void doubling(){
         this.size = this.size*2;
         Object[] newData = new Object[this.size]; //배열의 크기를 2배로 늘려줌
-        for(int i=0; i<data.length; i++){
+        for(int i=0; i<this.index; i++){
             newData[i] = data[i]; //기존 배열 복사
         }
         this.data = newData;
      }
-     // index로 data 가져오는 겨우
+
+     // index로 data 가져오는 경우
      public Object get(int i) throws Exception{
         if(i> this.index-1){// 가지고 있는 데이터보다 큰 경우
             throw new Exception("ArrayIndexOutOfBound");
@@ -39,6 +40,7 @@ public class MyArrayList{
         }
         return this.data[i];
      }
+
      //데이터 제거
      public void remove(int i) throws Exception{
         if(i > this.index-1){ // 가지고 있는 데이터보다 큰 경우
@@ -48,15 +50,15 @@ public class MyArrayList{
             throw new Exception("NegativeValue");
         }
         //삭제할 데이터 위치 기준으로 한칸씩 앞으로 덮어씌움
-        for(int x=i; x < this.data.length-1; x++){
+        for(int x=i; x < this.index; x++){
             data[x] = data[x+1];
         }
         this.index--;
      }
 
-     //데이터 중간 삽입 -> 다시 고민하기
+     //데이터 삽입 
      public void insert(int i, Object obj) throws Exception{
-        if(i > this.index-1){ // 가지고 있는 데이터보다 큰 경우
+        if(i > this.index){ // 가지고 있는 데이터보다 큰 경우
             throw new Exception("ArrayIndexOutOfBound");
         }
         else if(i<0){
@@ -67,12 +69,45 @@ public class MyArrayList{
             doubling();
         }
         // 데이터를 추가할 자리까지 데이터를 역순으로 뒤로 이동
-        this.index++;
-        for(int x = this.data.length-1; x >= i; x--){
+        if(i<this.index){
+            for(int x = this.index-1; x >= i; x--){
             this.data[x+1] = this.data[x];
+            }
         }
         this.data[i] = obj;
+        this.index++;
      }
+
      //데이터 검색
+     public boolean contains(Object obj){
+        for(int i = 0; i<this.index; i++){
+            if(data[i].equals(obj))
+                return true;
+        }
+        return false;
+     }
+
+     // ArrayList에 저장된 데이터 크기 측정
+     public int size(){
+        return this.index;
+     }
+
+     // ArrayList가 비어있는지 확인
+     public boolean isEmpty(){
+        return this.index == 0;
+     }
+
+     //데이터 출력
+     @Override
+     public String toString(){
+        StringBuilder sb = new StringBuilder("[");
+        for(int i = 0; i < this.index; i++){
+            sb.append(data[i]);
+            if(i < this.index - 1)
+                sb.append(", ");
+        }
+        sb.append("]");
+        return sb.toString();
+     }
 
 }
