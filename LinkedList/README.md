@@ -26,8 +26,8 @@
 | `add(T data)` | 맨 뒤에 추가 | O(1) |
 | `get(int index)` | 인덱스로 값 조회 | O(n) |
 | `contains(T data)` | 값 포함 여부 확인 | O(n) |
-| `insert(int index, T data)` | 특정 위치에 삽입 | O(n) |
-| `remove(int index)` | 특정 위치 삭제 | O(n) |
+| `insert(int index, T data)` | 특정 위치까지 탐색 후 삽입 | O(n) |
+| `remove(int index)` | 특정 위치까지 탐색 후 삭제 | O(n) |
 | `size()` | 리스트 크기 반환 | O(1) |
 | `isEmpty()` | 비어있는지 확인 | O(1) |
 
