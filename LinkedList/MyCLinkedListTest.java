@@ -1,6 +1,6 @@
 package LinkedList;
 
-public class MyCLinkedList {
+public class MyCLinkedListTest {
 
      public static void main(String[] args) throws Exception {
       MyCircularLinkedList<String> list = new MyCircularLinkedList<>();
