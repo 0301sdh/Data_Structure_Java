@@ -16,7 +16,7 @@ public class DequeExample2 {
         System.out.println(stack.pop());
         System.out.println(stack.peek());
 
-        // Deque를 queue로 활용
+        // Deque를 Queue로 활용
         Deque<Integer> queue = new ArrayDeque<>();
         queue.offer(10);
         queue.offer(20);
