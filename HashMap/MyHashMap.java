@@ -3,7 +3,7 @@ package HashMap;
 public class MyHashMap<K,V>{
     
     // 각 버킷에 저장되는 노드(연결 리스트)
-    public static class Node<K,V>{ // K,V 선언 오류 -> static
+    public static class Node<K,V>{ // K,V 선언 오류 -> static으로 해결
         final int hash;
         final K key;
         V value;
@@ -37,7 +37,7 @@ public class MyHashMap<K,V>{
         // hascode 가 겹치면 해싱 충돌이 일어난다. 현재 배열의 크기가 16
         // hashCode의 하위 비트만 영향을 주기 때문에 내부적으로 해싱을 더해준다
         h ^= (h>>>16);
-        return h & (table.length -1 ); //index 가 0~15 니까 // 나머지연산이랑 and 연산 비교해보기
+        return h & (table.length -1 ); //index 가 0~15 니까 // 나머지연산이랑 and 연산 비교해보기 -> and 연산이 더 빠름
     }
 
     // put : 키 - 값 저장
@@ -55,7 +55,7 @@ public class MyHashMap<K,V>{
         table[index] = new Node<>(index, key, value, table[index]);
         this.size++;
 
-        // 적재율 초과 시 resize resize 를 0.75로 하는이유
+        // 적재율 초과 시 resize
         if(this.size> table.length * LOAD_FACTOR)
             resize();
     }
