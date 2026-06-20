@@ -15,7 +15,7 @@
 - [O] HashMap
 - [O] HashSet
 
-## HashMap 정리 (2026-06-20)
+## HashMap 구현 (2026-06-20)
 
 ### 구조
 - 배열(bucket) + 연결 리스트(chaining) 로 구현
