@@ -119,6 +119,33 @@ public class MyHashMap2<K,V>{
         int oldCapacity = capacity;
 
         capacity = oldCapacity*2;
-        
+        keys = (K[]) new Object[capacity];
+        values = (V[]) new Object[capacity];
+        deleted = new boolean[capacity];
+        size = 0;
+
+        for(int i = 0 ; i< oldCapacity; i++){
+            if(!oldDeleted[i] && oldKeys[i] != null){
+                put(oldKeys[i], oldValues[i]);
+            }
+        }
+    }
+
+    // toString: 내용 출력
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder("[");
+        int count = 0;
+        for(int i = 0; i<capacity; i++){
+            if(!deleted[i] && keys[i] != null){
+                sb.append(keys[i]).append("=").append(values[i]);
+                if(count < size - 1){
+                    sb.append(" , ");
+                }
+                count++;
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }
