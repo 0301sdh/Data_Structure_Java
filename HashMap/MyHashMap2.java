@@ -29,35 +29,96 @@ public class MyHashMap2<K,V>{
             return 0;
         int h = key.hashCode();
         h ^= (h>>>16);
-        return h&(capacity-1);
+        return h & (capacity-1);
     }
 
     //put : 키- 값 저장(Linear Probing)
-    // 충돌 시 다음 슬롯으로 이동하며 빈 자리를 찾기
+    // 충돌 시 다음 슬롯으로 이동하며 빈 자리를 찾기(원형)
     public void put(K key, V value){
         if(size >= capacity*LOAD_FACTOR){
             resize();
         }
         int index = hash(key);
-        while (keys[index] != null) {
-            if(!deleted[index] && keys[index].equals(key)){
+        int firstDeleted = -1; // 탐색중 만난 첫번째 deleted: true 위치
+        while(keys[index] != null || deleted[index]){
+            if(deleted[index]){
+                if(firstDeleted == -1){
+                    firstDeleted = index;
+                }
+            }
+            else if(keys[index].equals(key)){
                 values[index] = value;
                 return;
             }
-            if(deleted[index]){
-                break;
-            }
-            index = (index + 1) % capacity; // 다음 슬롯으로 이동(원형 순환)
+            index = (index + 1) % capacity;
+        }
+        if(firstDeleted != -1){
+            index = firstDeleted;
         }
         keys[index] = key;
         values[index] = value;
-        size++;
         deleted[index] = false;
+        size++; 
     }
 
-    public void remove(K key){
+    // get : 키로 값 조회
+    public V get(K key){
+        int index = findIndex(key);
+        if(index == -1)
+            return null;
+        return values[index];
+    }
+
+    // remove : 키로 삭제, 삭제된 값 반환
+    // 그냥 삭제하면 같은 해시값을 가진 뒤쪽 데이터를 찾을 수 없음
+    // 그래서 deleted를 사용함
+    public V remove(K key){
+        int index = findIndex(key);
+        if(index == -1)
+            return null;
+        V oldValue = values[index];
+        deleted[index] = true;
+        keys[index] = null;
+        values[index] = null;
+        size --;
+        return oldValue;
+    }
+
+    // findIndex: 키가 저장된 슬롯의 인덱스를 찾는다
+    private int findIndex(K key){
         int index = hash(key);
-        if(!deleted[index] || (keys[index] == null))
-            System.out.println("empty");
+        while(keys[index] != null || deleted[index]){
+            if(!deleted[index] && keys[index].equals(key))// deleted[index] 로 불필요한 equals 호출 감소 null.equals -> Null Pointer Exception
+                return index;
+            index = (index+1)%capacity;
+        }
+        return -1;
+    }
+
+    // containsKey : 키 존재 여부
+    public boolean containsKey(K key){
+        return findIndex(key) != -1;
+    }
+
+    // size: 저장된 데이터 개수
+    public int size(){
+        return size;
+    }
+
+    //isEmpty : 비어있는지 확인
+    public boolean isEmpty(){
+        return size == 0;
+    }
+
+    // resize : 배열을 2배로 확장하고 모든 데이터를 재배치
+    @SuppressWarnings("unchecked")
+    private void resize(){
+        K[] oldKeys = keys;
+        V[] oldValues = values;
+        boolean[] oldDeleted = deleted;
+        int oldCapacity = capacity;
+
+        capacity = oldCapacity*2;
+        
     }
 }
