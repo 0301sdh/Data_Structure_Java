@@ -32,26 +32,34 @@ public class MyHashSet<E> {
         return h & (table.length - 1);
     }
 
-    public void put(E element){
+    public boolean add(E element){
         if(element == null)
             throw new NullPointerException("NPE");
+
         int index = hash(element);
         Node<E> current = table[index];
         while(current != null){
-            if(current.element.equals(element))
-                return;
+            if(current.element.equals(element)){
+                return false; // 이미 데이터가 있다
+            }
             current = current.next;
         }
+
         table[index] = new Node<>(index, element, table[index]);
         this.size ++;
 
-        if(this.size > table.length * LOAD_FACTOR)
+        if(size > table.length*LOAD_FACTOR)
             resize();
+
+        return true;
     }
 
-    public void remove(E element){
+
+
+    public boolean remove(E element){
         if(element == null)
             throw new NullPointerException("NPE");
+
         int index = hash(element);
         Node<E> current = table[index];
         Node<E> prev = null;
@@ -64,14 +72,15 @@ public class MyHashSet<E> {
                     prev.next = current.next;
                 }
                 this.size --;
-                return;
+                return true;
             }
             prev = current;
             current = current.next;
         }
+        return false;
     }
 
-    public boolean containsKey(E element){
+    public boolean contains(E element){
         if(element == null)
             throw new NullPointerException("NPE");
         int index = hash(element);
@@ -101,7 +110,7 @@ public class MyHashSet<E> {
         for(int i = 0; i<oldTable.length; i++){
             Node<E> current = oldTable[i];
             while(current != null){
-                put(current.element);
+                add(current.element);
                 current = current.next;
             }
         }
@@ -126,5 +135,47 @@ public class MyHashSet<E> {
         sb.append("]");
         return sb.toString();
     }
+
+
+    // public void put(E element){
+    //     if(element == null)
+    //         throw new NullPointerException("NPE");
+    //     int index = hash(element);
+    //     Node<E> current = table[index];
+    //     while(current != null){
+    //         if(current.element.equals(element))
+    //             return;
+    //         current = current.next;
+    //     }
+    //     table[index] = new Node<>(index, element, table[index]);
+    //     this.size ++;
+
+    //     if(this.size > table.length * LOAD_FACTOR)
+    //         resize();
+    // }
+
+    
+    // public void remove(E element){
+    //     if(element == null)
+    //         throw new NullPointerException("NPE");
+    //     int index = hash(element);
+    //     Node<E> current = table[index];
+    //     Node<E> prev = null;
+    //     while(current != null){
+    //         if(current.element.equals(element)){
+    //             if(prev == null){
+    //                 table[index] = current.next;
+    //             }
+    //             else{
+    //                 prev.next = current.next;
+    //             }
+    //             this.size --;
+    //             return;
+    //         }
+    //         prev = current;
+    //         current = current.next;
+    //     }
+    // }
+
 
 }
