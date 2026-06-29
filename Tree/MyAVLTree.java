@@ -1,8 +1,5 @@
 package Tree;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MyAVLTree<T extends Comparable<T>> {
 
    private static class Node<T> {
@@ -33,11 +30,13 @@ public class MyAVLTree<T extends Comparable<T>> {
    // ===== 회전 =====
 
    // 오른쪽 회전 (LL 케이스)
-   // y x
-   // / \ / \
-   // x T3 ---> T1 y
-   // / \ / \
-   // T1 T2 T2 T3
+   // @formatter:off
+   //         y                  x
+   //        / \                / \
+   //       x   T3   ──────►   T1   y
+   //      / \                    / \
+   //    T1   T2                T2   T3
+   // @formatter:on
 
    private Node<T> rotateRight(Node<T> y) {
       Node<T> x = y.left;
@@ -51,11 +50,13 @@ public class MyAVLTree<T extends Comparable<T>> {
    }
 
    // 왼쪽 회전 (RR 케이스)
-   // x y
-   // / \ / \
-   // T1 y ---> x T3
-   // / \ / \
-   // T2 T3 T1 T2
+   // @formatter:off
+   //     x                        y
+   //    / \                      / \
+   //   T1   y      ──────►      x   T3
+   //       / \                 / \
+   //     T2   T3             T1   T2
+   // @formatter:on
 
    private Node<T> rotateLeft(Node<T> x) {
       Node<T> y = x.right;
@@ -114,23 +115,6 @@ public class MyAVLTree<T extends Comparable<T>> {
          return node;
       }
       return rebalance(node);
-   }
-
-   // 검색
-   public boolean search(T data) {
-      return search(root, data);
-   }
-
-   private boolean search(Node<T> node, T data) {
-      if (node == null)
-         return false;
-      int cmp = data.compareTo(node.data);
-      if (cmp < 0) {
-         return search(node.left, data);
-      } else if (cmp > 0) {
-         return search(node.right, data);
-      } else
-         return true;
    }
 
    // 삭제
@@ -195,6 +179,20 @@ public class MyAVLTree<T extends Comparable<T>> {
       inorder(node.left);
       System.out.print(node.data + " ");
       inorder(node.right);
+   }
+
+   // AVL 균형 조건 : 모든 노드의 bf <=1
+   public boolean isBalanced() {
+      return isBalanced(root);
+   }
+
+   private boolean isBalanced(Node<T> node) {
+      if (node == null)
+         return true;
+      if (Math.abs(balanceFactor(node)) > 1)
+         return false;
+
+      return isBalanced(node.right) && isBalanced(node.left);
    }
 
 }
