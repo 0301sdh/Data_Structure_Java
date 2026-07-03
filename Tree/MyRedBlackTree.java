@@ -170,7 +170,43 @@ public class MyRedBlackTree<T extends Comparable<T>> {
     }
 
     // 삭제
-    private void transplant(Node<T> u, Noed<T> v)
+
+    // u 자리에 v를 삽입
+    private void transplant(Node<T> u, Node<T> v) {
+        if (u.parent == NIL) {
+            root = v;
+        } else if (u == u.parent.left) {
+            u.parent.left = v;
+        } else {
+            u.parent.right = v;
+        }
+        v.parent = u.parent;
+    }
+
+    private Node<T> minNode(Node<T> node) {
+        while (node.left != NIL) {
+            node = node.left;
+        }
+        return node;
+    }
+
+    // 여기서 부터 다시하기
+    public void delete(T data) {
+        if (data == null) {
+            throw new NullPointerException("NPE");
+        }
+        Node<T> current = root;
+        while (current != NIL) {
+            int cmp = data.compareTo(current.data);
+            if (cmp < 0) {
+                current = current.left;
+            } else if (cmp > 0) {
+                current = current.right;
+            } else {
+                break;
+            }
+        }
+    }
 
     // 조회
     public boolean contains(T data) {
@@ -192,7 +228,13 @@ public class MyRedBlackTree<T extends Comparable<T>> {
     }
 
     // 순회
-    public void inorder(Node<T> node) {
+
+    public void inorder() {
+        inorder(root);
+        System.out.println();
+    }
+
+    private void inorder(Node<T> node) {
         if (node == NIL) {
             return;
         }
@@ -201,13 +243,24 @@ public class MyRedBlackTree<T extends Comparable<T>> {
         inorder(node.right);
     }
 
-    private int blackHeight(Node<T> node){
-        if(node == NIL)
+    public boolean isBalanced() {
+        if (root.color != BLACK) {
+            return false;
+        }
+        return blackHeight(root) != -1;
+    }
+
+    private int blackHeight(Node<T> node) {
+        if (node == NIL)
             return 1;
-        if(node.color == RED && (node.left.color == RED || node.right.color == RED))
+        if (node.color == RED && (node.left.color == RED || node.right.color == RED))
             return -1;
         int left = blackHeight(node.left);
         int right = blackHeight(node.right);
-        return 
+
+        if (left == -1 || right == -1 || left != right)
+            return -1;
+
+        return left + (node.color == BLACK ? 1 : 0);
     }
 }
