@@ -47,7 +47,7 @@ public class MyRedBlackTree<T extends Comparable<T>> {
         }
         y.parent = x.parent;
         if (x.parent == NIL) {
-            y = root;
+            root = y;
         } else if (x == x.parent.left) {
             x.parent.left = y;
         } else {
@@ -80,7 +80,7 @@ public class MyRedBlackTree<T extends Comparable<T>> {
         }
         x.parent = y.parent;
         if (y.parent == NIL) {
-            x = root;
+            root = x;
         } else if (y == y.parent.left) {
             y.parent.left = x;
         } else {
@@ -143,20 +143,18 @@ public class MyRedBlackTree<T extends Comparable<T>> {
                         rotateLeft(newNode);
                     }
                     newNode.parent.color = BLACK;
-                    newNode.parent.parent.color = RED:
+                    newNode.parent.parent.color = RED;
                     rotateRight(newNode.parent.parent);
                 }
-            }
-            else{
+            } else {
                 Node<T> uncle = newNode.parent.parent.left;
-                if(uncle.color == RED){
+                if (uncle.color == RED) {
                     newNode.parent.color = BLACK;
                     uncle.color = BLACK;
                     newNode.parent.parent.color = RED;
                     newNode = newNode.parent.parent;
-                }
-                else{
-                    if(newNode == newNode.left){
+                } else {
+                    if (newNode == newNode.parent.left) {
                         newNode = newNode.parent;
                         rotateRight(newNode);
                     }
@@ -165,8 +163,8 @@ public class MyRedBlackTree<T extends Comparable<T>> {
                     rotateLeft(newNode.parent.parent);
                 }
             }
-            root.color = BLACK; // 루트 노드는 항상 BLACK
         }
+        root.color = BLACK; // 루트 노드는 항상 BLACK
     }
 
     // 삭제
@@ -190,22 +188,115 @@ public class MyRedBlackTree<T extends Comparable<T>> {
         return node;
     }
 
-    // 여기서 부터 다시하기
     public void delete(T data) {
         if (data == null) {
             throw new NullPointerException("NPE");
         }
-        Node<T> current = root;
-        while (current != NIL) {
-            int cmp = data.compareTo(current.data);
+        Node<T> target = root;
+        while (target != NIL) {
+            int cmp = data.compareTo(target.data);
             if (cmp < 0) {
-                current = current.left;
+                target = target.left;
             } else if (cmp > 0) {
-                current = current.right;
+                target = target.right;
             } else {
                 break;
             }
         }
+        if (target == NIL)
+            return; // 없는 키
+
+        Node<T> removed = target;
+
+        boolean removedColor = removed.color;
+
+        Node<T> fixNode; // removed 자리를 채울 노드(이중 블랙 후보)
+
+        if (target.left == NIL) {
+            fixNode = target.right;
+            transplant(target, target.right);
+        } else if (target.right == NIL) {
+            fixNode = target.left;
+            transplant(target, target.left);
+        } else {
+            removed = minNode(target.right);
+            removedColor = removed.color;
+            fixNode = removed.right;
+
+            if (removed.parent == target) {
+                fixNode.parent = removed;
+            } else {
+                transplant(removed, removed.right);
+                removed.right = target.right;
+                removed.right.parent = removed;
+            }
+            transplant(target, removed);
+            removed.left = target.left;
+            removed.left.parent = removed;
+            removed.color = target.color;
+        }
+
+        if (removedColor == BLACK) {
+            deleteFixup(fixNode);
+        }
+    }
+
+    private void deleteFixup(Node<T> fixNode) {
+        while (fixNode != root && fixNode.color == BLACK) {
+            if (fixNode == fixNode.parent.left) {
+                Node<T> sibling = fixNode.parent.right;
+
+                if (sibling.color == RED) { // case 1 : 형제 red
+                    sibling.color = BLACK;
+                    fixNode.parent.color = RED;
+                    rotateLeft(fixNode.parent);
+                    sibling = fixNode.parent.right;
+                }
+
+                if (sibling.left.color == BLACK && sibling.right.color == BLACK) { // 형제 : black, 조카 둘다 black
+                    sibling.color = RED;
+                    fixNode = fixNode.parent;
+                } else {
+                    if (sibling.right.color == BLACK) { // case 3-1 왼쪽 조카가 RED
+                        sibling.left.color = BLACK;
+                        sibling.color = RED;
+                        rotateRight(sibling);
+                        sibling = fixNode.parent.right;
+                    }
+                    // case 3-2 오른쪽 조카가 RED
+                    sibling.color = fixNode.parent.color;
+                    fixNode.parent.color = BLACK;
+                    sibling.right.color = BLACK;
+                    rotateLeft(fixNode.parent);
+                    fixNode = root; // 탈출용
+                }
+            } else { // fixNode = fixNode.parent.right
+                Node<T> sibling = fixNode.parent.left;
+                if (sibling.color == RED) {
+                    sibling.color = BLACK;
+                    fixNode.parent.color = RED;
+                    rotateRight(fixNode.parent);
+                    sibling = fixNode.parent.left;
+                }
+                if (sibling.right.color == BLACK && sibling.left.color == BLACK) {
+                    sibling.color = RED;
+                    fixNode = fixNode.parent;
+                } else {
+                    if (sibling.left.color == BLACK) {
+                        sibling.right.color = BLACK;
+                        sibling.color = RED;
+                        rotateLeft(sibling);
+                        sibling = fixNode.parent.left;
+                    }
+                    sibling.color = fixNode.parent.color;
+                    fixNode.parent.color = BLACK;
+                    sibling.left.color = BLACK;
+                    rotateRight(fixNode.parent);
+                    fixNode = root;
+                }
+            }
+        }
+        fixNode.color = BLACK;
     }
 
     // 조회
