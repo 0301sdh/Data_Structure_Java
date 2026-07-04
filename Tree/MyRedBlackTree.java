@@ -6,7 +6,7 @@ public class MyRedBlackTree<T extends Comparable<T>> {
     private static final boolean RED = true;
     private static final boolean BLACK = false;
 
-    private class Node<T> {
+    private static class Node<T> {
         T data;
         boolean color;
         Node<T> left, right, parent;
