@@ -126,6 +126,87 @@ public class MyBTree<T extends Comparable<T>> {
         }
     }
 
+    // 삭제
+    public void delete(T data) {
+        delete(root, data);
+        // 삭제 후 루트의 키가 0개가 되면(내부 노드였다면) 유일한 자식을 새 루트로 삼아
+        // 트리 높이를 하나 줄인다(삽입에서 높이가 늘던 것의 반대)
+        if (root.numKeys == 0 && !root.isLeaf) {
+            root = root.children[0];
+        }
+    }
+
+    // delete 부터 다시 하기
+    private void delete(Node node, T data) {
+        int index = findKeyIndex(node, data);
+
+        if (index < node.numKeys && data.compareTo(keyAt(node, index)) == 0) {
+            if (node.isLeaf) {
+                removeFromLeaf(node, index);
+            } else {
+                removeFromNonLeaf(node, index);
+            }
+        } else {
+            if (node.isLeaf) {
+                return; // 트리에 존재하지 않는다
+            }
+            // 내려갈 자식(index번째)이 t-1뿐이면 먼저 t개로 채운다(최소보다 많아야 됨)
+            if (node.children[index].numKeys < minDegree) {
+                fill(node, index);
+            }
+        }
+    }
+
+    // data 이상인 첫 번째 키의 인덱스를 찾는다
+    private int findKeyIndex(Node node, T data) {
+        int index = 0;
+        while (index < node.numKeys && data.compareTo(keyAt(node, index)) > 0) {
+            index++;
+        }
+        return index;
+    }
+
+    // 리프에서 index 위치의 키를 지우고 뒤 키들을 앞으로 당긴다
+    private void removeFromLeaf(Node node, int index) {
+        for (int i = index + 1; i < node.numKeys; i++) {
+            node.keys[i - 1] = node.keys[i];
+        }
+        node.keys[node.numKeys - 1] = null;
+        node.numKeys--;
+    }
+
+    // 내부 노드에서 index 위치의 키를 지운다
+    private void removeFromNonLeaf(Node node, int index) {
+        T key = keyAt(node, index);
+
+        if (node.children[index].numKeys >= minDegree) {
+            T predecessor = getMax(node.children[index]);
+            node.keys[index] = predecessor;
+            delete(node.children[index], predecessor);
+        } else if (node.children[index + 1].numKeys >= minDegree) {
+            T succesor = getMin(node.children[index + 1]);
+            node.keys[index] = succesor;
+            delete(node.children[index + 1], succesor);
+        } else {
+            merge(node, index);
+            delete(node.children[index], key);
+        }
+    }
+
+    private T getMax(Node node) {
+        while (!node.isLeaf) {
+            node = node.children[node.numKeys];
+        }
+        return keyAt(node, node.numKeys - 1);
+    }
+
+    private T getMin(Node node) {
+        while (!node.isLeaf) {
+            node = node.children[0];
+        }
+        return keyAt(node, 0);
+    }
+
     // 탐색
     public boolean contains(T data) {
         if (data == null) {
@@ -165,4 +246,5 @@ public class MyBTree<T extends Comparable<T>> {
             inorder(node.children[i]);
         }
     }
+
 }
