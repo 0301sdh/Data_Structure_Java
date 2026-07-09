@@ -14,7 +14,6 @@ public class MyBTree<T extends Comparable<T>> {
         Node[] children; // 자식 배열
         boolean isLeaf; // 리프노드의 여부
 
-        @SuppressWarnings("unchecked")
         Node(int minDegree, boolean isLeaf) {
             this.isLeaf = isLeaf;
             this.numKeys = 0;
