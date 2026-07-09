@@ -1,7 +1,5 @@
 package Tree;
 
-import javax.swing.text.html.StyleSheet;
-
 public class MyBTree<T extends Comparable<T>> {
 
     // minDegree(t) : 최소 차수. t>=2
@@ -71,7 +69,7 @@ public class MyBTree<T extends Comparable<T>> {
 
         // fullChild의 뒤쪽 t-1개 키를 newRight로 옮긴다
         newRight.numKeys = minDegree - 1;
-        for (int i = 0; i < minDegree; i++) {
+        for (int i = 0; i < minDegree - 1; i++) {
             newRight.keys[i] = fullChild.keys[i + minDegree];
             fullChild.keys[i + minDegree] = null;
         }
@@ -98,6 +96,7 @@ public class MyBTree<T extends Comparable<T>> {
             parent.keys[i + 1] = parent.keys[i];
         }
         parent.keys[childIndex] = midKey;
+        parent.numKeys++;
     }
 
     // 꽉 차지 않은 노드에 데이터를 삽입한다
@@ -136,7 +135,6 @@ public class MyBTree<T extends Comparable<T>> {
         }
     }
 
-    // delete 부터 다시 하기
     private void delete(Node node, T data) {
         int index = findKeyIndex(node, data);
 
@@ -153,6 +151,12 @@ public class MyBTree<T extends Comparable<T>> {
             // 내려갈 자식(index번째)이 t-1뿐이면 먼저 t개로 채운다(최소보다 많아야 됨)
             if (node.children[index].numKeys < minDegree) {
                 fill(node, index);
+            }
+
+            if (index > node.numKeys) {
+                delete(node.children[index - 1], data);
+            } else {
+                delete(node.children[index], data);
             }
         }
     }
@@ -184,12 +188,91 @@ public class MyBTree<T extends Comparable<T>> {
             node.keys[index] = predecessor;
             delete(node.children[index], predecessor);
         } else if (node.children[index + 1].numKeys >= minDegree) {
-            T succesor = getMin(node.children[index + 1]);
-            node.keys[index] = succesor;
-            delete(node.children[index + 1], succesor);
+            T successor = getMin(node.children[index + 1]);
+            node.keys[index] = successor;
+            delete(node.children[index + 1], successor);
         } else {
             merge(node, index);
             delete(node.children[index], key);
+        }
+    }
+
+    // 왼쪽 형제 -> 자식으로 키 하나 빌려오기(부모를 거친 오른쪽 회전)
+    private void borrowFromPrev(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node leftSibling = node.children[childIndex - 1];
+
+        for (int i = child.numKeys - 1; i >= 0; i--) {
+            child.keys[i + 1] = child.keys[i];
+        }
+
+        if (!child.isLeaf) {
+            for (int i = child.numKeys; i >= 0; i--) {
+                child.children[i + 1] = child.children[i];
+            }
+        }
+
+        child.keys[0] = node.keys[childIndex - 1];
+
+        if (!child.isLeaf) {
+            child.children[0] = leftSibling.children[leftSibling.numKeys];
+            leftSibling.children[leftSibling.numKeys] = null;
+        }
+
+        node.keys[childIndex - 1] = leftSibling.keys[leftSibling.numKeys - 1];
+        leftSibling.keys[leftSibling.numKeys - 1] = null;
+
+        child.numKeys++;
+        leftSibling.numKeys--;
+    }
+
+    // 오른쪽 형제 -> 자식으로 키 하나 빌려오기
+    private void borrowFromNext(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node rightSibling = node.children[childIndex + 1];
+
+        child.keys[child.numKeys] = node.keys[childIndex];
+
+        if (!child.isLeaf) {
+            child.children[child.numKeys + 1] = rightSibling.children[0];
+        }
+
+        node.keys[childIndex] = rightSibling.keys[0];
+
+        for (int i = 1; i < rightSibling.numKeys; i++) {
+            rightSibling.keys[i - 1] = rightSibling.keys[i];
+        }
+        rightSibling.keys[rightSibling.numKeys - 1] = null;
+        if (!rightSibling.isLeaf) {
+            for (int i = 1; i <= rightSibling.numKeys; i++) {
+                rightSibling.children[i - 1] = rightSibling.children[i];
+            }
+
+            rightSibling.children[rightSibling.numKeys] = null;
+        }
+
+        child.numKeys++;
+        rightSibling.numKeys--;
+    }
+
+    // childIndex번째 자식이 최소(t-1)일 때, 형제에게 빌리거나 병합해서 t개로 만든다
+    private void fill(Node node, int childIndex) {
+        // 왼쪽 형제가 여유 있으면 빌려온다
+        if (childIndex != 0 && node.children[childIndex - 1].numKeys >= minDegree) {
+            borrowFromPrev(node, childIndex);
+        }
+        // 오른쪽 형제가 여유 있으면 빌려온다
+        else if (childIndex != node.numKeys && node.children[childIndex + 1].numKeys >= minDegree) {
+            borrowFromNext(node, childIndex);
+        }
+
+        // 양쪽 형제 모두 최소치면 병합한다
+        else {
+            if (childIndex != node.numKeys) {
+                merge(node, childIndex); // 오른쪽 형제와 병합
+            } else {
+                merge(node, childIndex - 1);
+            }
         }
     }
 
@@ -205,6 +288,37 @@ public class MyBTree<T extends Comparable<T>> {
             node = node.children[0];
         }
         return keyAt(node, 0);
+    }
+
+    // childIndex번째 자식 + 부모 + childIndex+1번째 자식을 하나로 병합
+    private void merge(Node node, int childIndex) {
+        Node left = node.children[childIndex];
+        Node right = node.children[childIndex + 1];
+
+        left.keys[minDegree - 1] = node.keys[childIndex];
+
+        for (int i = 0; i < right.numKeys; i++) {
+            left.keys[i + minDegree] = right.keys[i];
+        }
+
+        if (!left.isLeaf) {
+            for (int i = 0; i <= right.numKeys; i++) {
+                left.children[i + minDegree] = right.children[i];
+            }
+        }
+
+        left.numKeys += right.numKeys + 1;
+
+        for (int i = childIndex + 1; i < node.numKeys; i++) {
+            node.keys[i - 1] = node.keys[i];
+        }
+        node.keys[node.numKeys - 1] = null;
+
+        for (int i = childIndex + 2; i <= node.numKeys; i++) {
+            node.children[i - 1] = node.children[i];
+        }
+        node.children[node.numKeys] = null;
+        node.numKeys--;
     }
 
     // 탐색
@@ -236,7 +350,8 @@ public class MyBTree<T extends Comparable<T>> {
     }
 
     private void inorder(Node node) {
-        for (int i = 0; i < node.numKeys; i++) {
+        int i;
+        for (i = 0; i < node.numKeys; i++) {
             if (!node.isLeaf) {
                 inorder(node.children[i]);
             }
