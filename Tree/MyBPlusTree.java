@@ -104,11 +104,48 @@ public class MyBPlusTree<T extends Comparable<T>> {
             parent.keys[i + 1] = parent.keys[i];
         }
 
-        parent.children[childIndex] = upKey;
+        parent.keys[childIndex] = upKey;
         parent.numKeys++;
     }
 
     private void insertNonFull(Node node, T data) {
+        if (node.isLeaf) {
+            int i = node.numKeys - 1;
+            while (i >= 0 && data.compareTo(keyAt(node, i)) < 0) {
+                node.keys[i + 1] = node.keys[i];
+                i--;
+            }
+            node.keys[i + 1] = data;
+            node.numKeys++;
+        } else {
+            int childIndex = findChild(node, data);
+            if (node.children[childIndex].numKeys == 2 * minDegree - 1) {
+                splitChild(node, childIndex);
+                if (data.compareTo(keyAt(node, childIndex)) >= 0) {
+                    childIndex++;
+                }
+            }
+            insertNonFull(node.children[childIndex], data);
+        }
+    }
 
+    // 탐색
+    public boolean contains(T data) {
+        if (data == null) {
+            return false;
+        }
+        return contains(root, data);
+    }
+
+    private boolean contains(Node node, T data) {
+        if (node.isLeaf) {
+            for (int i = 0; i < node.numKeys; i++) {
+                if (data.compareTo(keyAt(node, i)) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return contains(node.children[findChild(node, data)], data);
     }
 }
