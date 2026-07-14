@@ -148,4 +148,135 @@ public class MyBPlusTree<T extends Comparable<T>> {
         }
         return contains(node.children[findChild(node, data)], data);
     }
+
+    public void delete(T data) {
+        if (data == null) {
+            return;
+        }
+        delete(root, data);
+        if (!root.isLeaf && root.numKeys == 0) {
+            root = root.children[0];
+        }
+    }
+
+    private void delete(Node node, T data) {
+        if (node.isLeaf) {
+            int idx = 0;
+            while (idx < node.numKeys && data.compareTo(keyAt(node, idx)) > 0) {
+                idx++;
+            }
+            if (idx < node.numKeys && data.compareTo(keyAt(node, idx)) == 0) {
+                removeFromLeaf(node, data);
+            }
+            return;
+        }
+
+        int childIndex = findChild(node, data);
+        if (node.children[childIndex].numKeys < minDegree) {
+            fill(node, childIndex);
+            childIndex = findChild(node, data);
+        }
+        delete(node.children[childIndex], data);
+
+        // 삭제한 값이 이 노드의 분리키와 같다면
+        for (int j = 0; j < node.numKeys; j++) {
+            if (data.compareTo(keyAt(node, j)) == 0) {
+                node.keys[j] = getMin(node.children[j + 1]);
+                break;
+            }
+        }
+    }
+
+    private void removeFromLeaf(Node node, int index) {
+        for (int i = index + 1; i < node.numKeys; i++) {
+            node.keys[i - 1] = node.keys[i];
+        }
+        node.keys[node.numKeys - 1] = null;
+        node.numKeys--;
+    }
+
+    private void fill(Node node, int childIndex) {
+        boolean leaf = node.children[childIndex].isLeaf;
+        if (childIndex != 0 && node.children[childIndex - 1].numKeys >= minDegree) {
+            if (leaf) {
+                borrowFromPrevLeaf(node, childIndex);
+            } else {
+                borrowFromPrevInternal(node, childIndex);
+            }
+        } else if (childIndex != node.numKeys && node.children[childIndex + 1] >= minDegree) {
+            if (leaf) {
+                borrowFromNextLeaf(node, childIndex);
+            } else {
+                borrowFromNextInternal(node, childIndex);
+            }
+        } else {
+            if (childIndex != node.numKeys) {
+                merge(node, childIndex);
+            } else {
+                merge(node, childIndex - 1);
+            }
+        }
+    }
+
+    private void borrowFromPrevLeaf(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node left = node.children[childIndex - 1];
+        for (int i = child.numKeys - 1; i >= 0; i--) {
+            child.keys[i + 1] = child.keys[i];
+        }
+        child.keys[0] = left.keys[left.numKeys - 1];
+        left.keys[left.numKeys - 1] = null;
+        left.numKeys--;
+        child.numKeys++;
+        node.keys[childIndex - 1] = child.keys[0];
+    }
+
+    private void borrowFromNextLeaf(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node right = node.children[childIndex + 1];
+        child.keys[child.numKeys] = right.keys[0];
+        child.numKeys++;
+        for (int i = 1; i < node.numKeys; i++) {
+            right.keys[i - 1] = right.keys[i];
+        }
+        right.keys[node.numKeys - 1] = null;
+        right.numKeys--;
+        node.keys[childIndex] = right.keys[0];
+    }
+
+    private void borrowFromPrevInternal(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node left = node.children[childIndex - 1];
+        for (int i = child.numKeys - 1; i >= 0; i--) {
+            child.keys[i + 1] = child.keys[i];
+        }
+        for (int i = child.numKeys; i >= 0; i--) {
+            child.children[i + 1] = child.children[i];
+        }
+        child.keys[0] = node.keys[childIndex - 1];
+        child.children[0] = left.children[left.numKeys];
+        left.children[left.numKeys] = null;
+        node.keys[childIndex - 1] = left.keys[left.numKeys - 1];
+        left.keys[left.numKeys] = null;
+        child.numKeys++;
+        left.numKeys--;
+    }
+
+    private void borrowFromNextInternal(Node node, int childIndex) {
+        Node child = node.children[childIndex];
+        Node right = node.children[childIndex + 1];
+        child.keys[child.numKeys] = node.keys[childIndex];
+        child.children[child.numKeys + 1] = right.children[0];
+        node.keys[childIndex] = right.keys[0];
+        for (int i = 1; i < right.numKeys; i++) {
+            right.keys[i - 1] = right.keys[i];
+        }
+        right.keys[right.numKeys - 1] = null;
+        for (int i = 0; i <= right.numKeys; i++) {
+            right.children[i - 1] = right.children[i];
+        }
+        right.children[right.numKeys] = null;
+        child.numKeys++;
+        right.numKeys--;
+    }
 }
