@@ -42,26 +42,25 @@ public class MyBPlusTree<T extends Comparable<T>> {
     // 내려갈 자식 index 찾기
     private int findChild(Node node, T data) {
         int i = 0;
-        while (i < node.numKeys && data.compareTo(keyAt(node, i)) > 0) {
+        while (i < node.numKeys && data.compareTo(keyAt(node, i)) >= 0) {
             i++;
         }
         return i;
     }
 
     // 삽입
-    public void insert(T data){
-        if(data == null){
+    public void insert(T data) {
+        if (data == null) {
             return;
         }
-        if(root.numKeys == 2*minDegree -1){
-            Node newRoot = new Node(minDegree, false));
+        if (root.numKeys == 2 * minDegree - 1) {
+            Node newRoot = new Node(minDegree, false);
             newRoot.children[0] = root;
             root = newRoot;
-            splitChild(newRoot,0);
+            splitChild(newRoot, 0);
             insertNonFull(newRoot, data);
-        }
-        else{
-            insertNonFull(Root, data);
+        } else {
+            insertNonFull(root, data);
         }
     }
 
@@ -100,7 +99,7 @@ public class MyBPlusTree<T extends Comparable<T>> {
         }
         parent.children[childIndex + 1] = newRight;
 
-        for (int i = parent.numKeys - 1; i > childIndex; i--) {
+        for (int i = parent.numKeys - 1; i >= childIndex; i--) {
             parent.keys[i + 1] = parent.keys[i];
         }
 
@@ -166,7 +165,7 @@ public class MyBPlusTree<T extends Comparable<T>> {
                 idx++;
             }
             if (idx < node.numKeys && data.compareTo(keyAt(node, idx)) == 0) {
-                removeFromLeaf(node, data);
+                removeFromLeaf(node, idx);
             }
             return;
         }
@@ -203,7 +202,7 @@ public class MyBPlusTree<T extends Comparable<T>> {
             } else {
                 borrowFromPrevInternal(node, childIndex);
             }
-        } else if (childIndex != node.numKeys && node.children[childIndex + 1] >= minDegree) {
+        } else if (childIndex != node.numKeys && node.children[childIndex + 1].numKeys >= minDegree) {
             if (leaf) {
                 borrowFromNextLeaf(node, childIndex);
             } else {
@@ -236,10 +235,10 @@ public class MyBPlusTree<T extends Comparable<T>> {
         Node right = node.children[childIndex + 1];
         child.keys[child.numKeys] = right.keys[0];
         child.numKeys++;
-        for (int i = 1; i < node.numKeys; i++) {
+        for (int i = 1; i < right.numKeys; i++) {
             right.keys[i - 1] = right.keys[i];
         }
-        right.keys[node.numKeys - 1] = null;
+        right.keys[right.numKeys - 1] = null;
         right.numKeys--;
         node.keys[childIndex] = right.keys[0];
     }
@@ -257,7 +256,7 @@ public class MyBPlusTree<T extends Comparable<T>> {
         child.children[0] = left.children[left.numKeys];
         left.children[left.numKeys] = null;
         node.keys[childIndex - 1] = left.keys[left.numKeys - 1];
-        left.keys[left.numKeys] = null;
+        left.keys[left.numKeys - 1] = null;
         child.numKeys++;
         left.numKeys--;
     }
@@ -272,11 +271,89 @@ public class MyBPlusTree<T extends Comparable<T>> {
             right.keys[i - 1] = right.keys[i];
         }
         right.keys[right.numKeys - 1] = null;
-        for (int i = 0; i <= right.numKeys; i++) {
+        for (int i = 1; i <= right.numKeys; i++) {
             right.children[i - 1] = right.children[i];
         }
         right.children[right.numKeys] = null;
         child.numKeys++;
         right.numKeys--;
+    }
+
+    private void merge(Node node, int childIndex) {
+        Node left = node.children[childIndex];
+        Node right = node.children[childIndex + 1];
+        if (left.isLeaf) {
+            for (int i = 0; i < right.numKeys; i++) {
+                left.keys[left.numKeys + i] = right.keys[i];
+            }
+            left.numKeys += right.numKeys;
+            left.next = right.next;
+        } else {
+            left.keys[left.numKeys] = node.keys[childIndex];
+            for (int i = 0; i < right.numKeys; i++) {
+                left.keys[left.numKeys + 1 + i] = right.keys[i];
+            }
+            for (int i = 0; i <= right.numKeys; i++) {
+                left.children[left.numKeys + 1 + i] = right.children[i];
+            }
+            left.numKeys += right.numKeys + 1;
+        }
+
+        for (int i = childIndex + 1; i < node.numKeys; i++) {
+            node.keys[i - 1] = node.keys[i];
+        }
+        node.keys[node.numKeys - 1] = null;
+
+        for (int i = childIndex + 2; i <= node.numKeys; i++) {
+            node.children[i - 1] = node.children[i];
+        }
+        node.children[node.numKeys] = null;
+        node.numKeys--;
+    }
+
+    private T getMin(Node node) {
+        while (!node.isLeaf) {
+            node = node.children[0];
+        }
+        return keyAt(node, 0);
+    }
+
+    public void printLeaves() {
+        Node node = root;
+        while (!node.isLeaf) {
+            node = node.children[0];
+        }
+        StringBuilder sb = new StringBuilder();
+        while (node != null) {
+            sb.append("[");
+            for (int i = 0; i < node.numKeys; i++) {
+                sb.append(keyAt(node, i));
+                if (i < node.numKeys - 1) {
+                    sb.append(" ");
+                }
+            }
+            sb.append("]");
+            if (node.next != null) {
+                sb.append("->");
+            }
+            node = node.next;
+        }
+        System.out.print(sb);
+    }
+
+    public static void main(String[] args) {
+        MyBPlusTree<Integer> tree = new MyBPlusTree<>(2);
+        int[] data = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        for (int x : data) {
+            tree.insert(x);
+        }
+
+        System.out.println("데이터 순차 출력");
+        tree.printLeaves();
+
+        tree.delete(5);
+        tree.delete(3);
+
+        tree.printLeaves();
     }
 }
