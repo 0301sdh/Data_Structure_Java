@@ -350,6 +350,7 @@ public class MyBPlusTree<T extends Comparable<T>> {
 
         System.out.println("데이터 순차 출력");
         tree.printLeaves();
+        System.out.println();
 
         tree.delete(5);
         tree.delete(3);
