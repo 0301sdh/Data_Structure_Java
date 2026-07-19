@@ -48,18 +48,6 @@
 ### resize (동적 배열 확장)
 - 배열은 크기가 고정 → "늘린다"는 건 **더 큰 배열을 새로 만들어 값을 복사**하는 것
 - 꽉 차면 **2배**로 확장 (1씩 늘리면 매번 복사라 느림 → 2배면 평균 O(1))
-- resize가 있으면 capacity는 "지켜야 할 한계"가 아니라 **초기 크기(성능 힌트)** 가 됨
-
-### 제네릭 설계 결정
-
-| 결정 | 이유 |
-|------|------|
-| `Object[]` 사용 | 제네릭은 `new T[]` 불가. resize에서 배열을 반복 생성하므로 생성 지점마다 캐스팅 안 하려고 `Object[]` 선택 |
-| `T extends Comparable<T>` | 힙엔 한 타입만 들어가니, 그 타입에 비교 능력(`compareTo`)을 강제 |
-| capacity 기본값 내부 지정 | resize가 있어 사용자가 크기를 정확히 맞출 필요 없음 |
-
-- 비교 시 캐스팅 괄호 주의: `((T) heap[i]).compareTo(...)`
-  - `(T) heap[i].compareTo(...)`로 쓰면 `.compareTo`가 `Object`에 먼저 걸려 컴파일 에러 (점 호출이 캐스팅보다 우선순위 높음)
 
 ### MaxHeap ↔ MinHeap 전환
 - 구조(배열 표현, 인덱스 계산, siftUp/siftDown)는 **완전히 동일**
@@ -67,13 +55,7 @@
 - 라이브러리는 부호를 고치는 대신 **Comparator만 교체** (`Comparator.reverseOrder()`)
 
 ### peek / size / isEmpty
-- 힙 동작(insert/poll/resize)에 **필수는 아닌 편의 메서드**
 - peek: 꺼내지 않고 최댓값만 O(1)로 확인 — "꺼낼지 말지 먼저 판단"할 때 유용
-
-### 표준 라이브러리와의 관계
-- 이 구현은 사실상 `java.util.PriorityQueue`의 뼈대
-- `PriorityQueue`는 여기에 **Comparator 지원**, `heapify` 생성자, `remove(Object)` 등이 더 붙은 형태
-- `PriorityQueue`도 내부적으로 `Object[]` + resize 방식을 사용
 
 ### 주의: 중복 값과 안정성
 - 중복 값은 정상 저장되고, poll 시 개수만큼 그대로 나옴
