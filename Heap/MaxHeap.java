@@ -12,6 +12,21 @@ public class MaxHeap<T extends Comparable<T>> {
         this.heap = new Object[capacity];
     }
 
+    public MaxHeap(T[] arr) {
+        this.capacity = arr.length;
+        this.size = arr.length;
+        this.heap = new Object[capacity];
+
+        for (int i = 0; i < size; i++) {
+            heap[i] = arr[i];
+        }
+
+        for (int i = parent(size - 1); i >= 0; i--) {
+            siftDown(i);
+        }
+
+    }
+
     private int parent(int i) {
         return (i - 1) / 2;
     }
@@ -137,6 +152,12 @@ public class MaxHeap<T extends Comparable<T>> {
         words.insert("banana");
         System.out.println("last word : " + words.peek());
 
+        Integer[] arr = { 3, 1, 9, 5, 2, 8, 7, 4 };
+        MaxHeap<Integer> built = new MaxHeap<>(arr);
+        System.out.print("build heap result : ");
+        while (!built.isEmpty()) {
+            System.out.print(built.poll() + " ");
+        }
     }
 
 }
