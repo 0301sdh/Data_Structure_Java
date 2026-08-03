@@ -55,6 +55,46 @@ public class Trie {
         return cur;
     }
 
+    public void delete(String word) {
+        delete(root, word, 0);
+    }
+
+    private boolean delete(Node cur, String word, int depth) {
+        if (cur == null) {
+            return false;
+        }
+
+        if (depth == word.length()) {
+            if (!cur.isEnd) {
+                return false;
+            }
+            cur.isEnd = false;
+
+            return isEmpty(cur);
+        }
+
+        int idx = word.charAt(depth) - 'a';
+        boolean shouldDeleteChild = delete(cur.children[idx], word, depth + 1);
+
+        if (shouldDeleteChild) {
+            cur.children[idx] = null;
+
+            return !cur.isEnd && isEmpty(cur);
+        }
+
+        return false;
+
+    }
+
+    private boolean isEmpty(Node node) {
+        for (Node child : node.children) {
+            if (child != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static void main(String[] args) {
         Trie trie = new Trie();
         trie.insert("rebro");
@@ -67,5 +107,15 @@ public class Trie {
         System.out.println(trie.search("rebro")); // true
         System.out.println(trie.search("rebr")); // false
         System.out.println(trie.startsWith("re")); // true
+
+        System.out.println("--- delete 테스트 ---");
+        trie.delete("hi");
+        System.out.println(trie.search("hi")); // false (지워짐)
+        System.out.println(trie.search("high")); // true (안 건드려짐)
+        System.out.println(trie.startsWith("hi")); // true (high가 hi 경로를 씀)
+
+        trie.delete("rebro");
+        System.out.println(trie.search("rebro")); // false
+        System.out.println(trie.search("replay")); // true (re까지 공유, 나머지는 유지)
     }
 }
