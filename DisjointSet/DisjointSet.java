@@ -5,7 +5,7 @@ public class DisjointSet {
     private int[] rank; // 각 트리의 랭크
     private int count; // 현재 그룹의 개수
 
-    // 생성자 : 원소 0 ~ n-1 을 각각 트기 1인 집합으로 초기화
+    // 생성자 : 원소 0 ~ n-1 을 각각 크기 1인 집합으로 초기화
     public DisjointSet(int n) {
         parent = new int[n];
         rank = new int[n];
